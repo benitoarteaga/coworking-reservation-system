@@ -26,6 +26,14 @@ services:
     networks:
       - net
 
+  backend:
+    build:
+      context: ./backend
+    working_dir: /app
+    ports:
+      - "4000:4000"
+    networks:
+      - net
 
 networks:
   net:

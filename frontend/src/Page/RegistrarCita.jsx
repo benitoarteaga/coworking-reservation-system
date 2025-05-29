@@ -1,25 +1,48 @@
 import React, { useState, useEffect } from 'react';
 
 function RegistrarCita({ user }) {
-  const [form, setForm] = useState({ fecha: '', hora: '', motivo: '', tipo_cita_id: '' });
-  const [mensaje, setMensaje] = useState('');
+  const [form, setForm] = useState({
+    fecha: '',
+    hora: '',
+    motivo: '',
+    tipo_cita_id: '',
+    user_id: user.id, // por defecto, el usuario actual
+  });
+  const [usuarios, setUsuarios] = useState([]);
   const [tiposCita, setTiposCita] = useState([]);
   const [horariosDisponibles, setHorariosDisponibles] = useState([]);
   const [horasOcupadas, setHorasOcupadas] = useState([]);
+  const [mensaje, setMensaje] = useState('');
 
+  // 🔽 Cargar usuarios si es admin
   useEffect(() => {
-    const cargarTipos = async () => {
-      try {
-        const res = await fetch('http://localhost:4000/api/tipos-cita');
-        const data = await res.json();
-        setTiposCita(data);
-      } catch (err) {
+    if (user.role === 'admin') {
+      fetch('http://localhost:4000/api/users/personas', { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => setUsuarios(data))
+        .catch(err => console.error('Error al cargar usuarios:', err));
+    }
+  }, [user]);
+
+  // 🔽 Cargar tipos de cita
+  useEffect(() => {
+    fetch('http://localhost:4000/api/tipos-cita', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setTiposCita(data);
+        } else {
+          console.error('Respuesta no es array:', data);
+          setTiposCita([]);
+        }
+      })
+      .catch(err => {
         console.error('Error al cargar tipos de cita:', err);
-      }
-    };
-    cargarTipos();
+        setTiposCita([]);
+      });
   }, []);
 
+  // 🔽 Cargar horarios disponibles
   useEffect(() => {
     const cargarHorarios = async () => {
       if (form.fecha && form.tipo_cita_id) {
@@ -28,7 +51,8 @@ function RegistrarCita({ user }) {
             `http://localhost:4000/api/citas/horarios-ocupados?fecha=${form.fecha}&tipo_cita_id=${form.tipo_cita_id}`,
             { credentials: 'include' }
           );
-          const ocupadas = await res.json();
+          const ocupadasRaw = await res.json();
+          const ocupadas = ocupadasRaw.map(h => h.slice(0, 5));
           setHorasOcupadas(ocupadas);
 
           const horarios = [];
@@ -40,18 +64,17 @@ function RegistrarCita({ user }) {
 
           const hoy = new Date().toISOString().split('T')[0];
           const ahora = new Date();
-          let horariosFiltrados = horarios;
+          let filtrados = horarios;
 
           if (form.fecha === hoy) {
             const horaActual = `${ahora.getHours().toString().padStart(2, '0')}:${(Math.floor(ahora.getMinutes() / 30) * 30).toString().padStart(2, '0')}`;
-            horariosFiltrados = horarios.filter(h => h > horaActual);
+            filtrados = horarios.filter(h => h > horaActual);
           }
 
-          // Filtra para quitar horarios ocupados
-          const disponibles = horariosFiltrados.filter(h => !ocupadas.includes(h));
+          const disponibles = filtrados.filter(h => !ocupadas.includes(h));
           setHorariosDisponibles(disponibles);
         } catch (err) {
-          console.error('Error al cargar horarios disponibles:', err);
+          console.error('Error al cargar horarios:', err);
         }
       } else {
         setHorariosDisponibles([]);
@@ -86,7 +109,13 @@ function RegistrarCita({ user }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       setMensaje('✅ Cita registrada correctamente.');
-      setForm({ fecha: '', hora: '', motivo: '', tipo_cita_id: '' });
+      setForm({
+        fecha: '',
+        hora: '',
+        motivo: '',
+        tipo_cita_id: '',
+        user_id: user.id,
+      });
       setHorariosDisponibles([]);
       setHorasOcupadas([]);
     } catch (err) {
@@ -96,8 +125,29 @@ function RegistrarCita({ user }) {
 
   return (
     <div>
-      <h3>Registrar cita para {user.username}</h3>
+      <h3>Registrar cita {user.role === 'admin' && 'para un paciente'}</h3>
+
       <form onSubmit={handleSubmit}>
+        {user.role === 'admin' && (
+          <div className="mb-3">
+            <label>Seleccionar Paciente:</label>
+            <select
+              name="user_id"
+              className="form-control"
+              value={form.user_id}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Seleccionar paciente --</option>
+              {usuarios.map(u => (
+                <option key={u.id} value={u.id}>
+                  {u.persona?.nombre} {u.persona?.apellido} - {u.role}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="mb-3">
           <label>Tipo de cita:</label>
           <select name="tipo_cita_id" className="form-control" value={form.tipo_cita_id} onChange={handleChange} required>
@@ -108,17 +158,29 @@ function RegistrarCita({ user }) {
           </select>
         </div>
 
-        <div className="mb-3">
-          <label>Fecha:</label>
-          <input
-            type="date"
-            name="fecha"
-            className="form-control"
-            value={form.fecha}
-            onChange={handleChange}
-            required
-          />
-        </div>
+        <input
+          type="date"
+          name="fecha"
+          className="form-control"
+          value={form.fecha}
+          onChange={handleChange}
+          min={new Date().toISOString().split('T')[0]}
+          required
+        />
+
+        {form.fecha && form.tipo_cita_id && (
+          <div className="mt-3">
+            <strong>Horas disponibles:</strong>
+            <div style={{ color: "green" }}>
+              {horariosDisponibles.length > 0 ? horariosDisponibles.join(", ") : "No hay horas disponibles"}
+            </div>
+
+            <strong className="mt-2">Horas ocupadas:</strong>
+            <div style={{ color: "red" }}>
+              {horasOcupadas.length > 0 ? horasOcupadas.join(", ") : "No hay horas ocupadas"}
+            </div>
+          </div>
+        )}
 
         <div className="mb-3">
           <label>Hora:</label>
@@ -128,14 +190,19 @@ function RegistrarCita({ user }) {
             value={form.hora}
             onChange={handleChange}
             required
-            disabled={horariosDisponibles.length == 0}
+            disabled={horariosDisponibles.length === 0 && horasOcupadas.length === 0}
           >
             <option value="">-- Seleccionar hora --</option>
-            {horariosDisponibles.map(hora => (
-              <option key={hora} value={hora}>
-                {hora}
-              </option>
-            ))}
+            {[...Array(21)].map((_, i) => {
+              const hour = 8 + Math.floor(i / 2);
+              const min = i % 2 === 0 ? '00' : '30';
+              const hora = `${hour.toString().padStart(2, '0')}:${min}`;
+              return (
+                <option key={hora} value={hora} disabled={horasOcupadas.includes(hora)}>
+                  {hora}{horasOcupadas.includes(hora) ? ' (Ocupado)' : ''}
+                </option>
+              );
+            })}
           </select>
         </div>
 

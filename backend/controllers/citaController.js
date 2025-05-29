@@ -56,18 +56,20 @@ exports.getCitasPorRol = async (req, res) => {
 
 
 exports.registrarCita = async (req, res) => {
-  const { fecha, hora, motivo, tipo_cita_id } = req.body;
-  const { id: userId } = req.session.user;
+  const { fecha, hora, motivo, tipo_cita_id, user_id } = req.body; // <-- recibimos user_id opcional
+  const { id: sessionUserId, role } = req.session.user;
 
-  if (!userId) return res.status(401).json({ message: 'No autorizado' });
+  if (!sessionUserId) return res.status(401).json({ message: 'No autorizado' });
+
+  // Si es admin, se usa el user_id enviado por el formulario
+  // Si no lo es, se fuerza a usar el ID del usuario logueado
+  const usuarioIdFinal = (role === 'admin' && user_id) ? user_id : sessionUserId;
 
   try {
-    // Validar horario permitido
     if (hora < '08:00' || hora > '18:00') {
       return res.status(400).json({ code: 'HORA_INVALIDA', message: 'La hora debe estar entre 08:00 y 18:00.' });
     }
 
-    // Verificar si ya existe cita con mismo tipo_cita_id, fecha y hora
     const citaExistente = await db.query(
       `SELECT 1 FROM citas 
        WHERE fecha = $1 AND hora = $2 AND tipo_cita_id = $3 AND estado = 1`,
@@ -81,11 +83,10 @@ exports.registrarCita = async (req, res) => {
       });
     }
 
-    // Registrar la nueva cita
     await db.query(
       `INSERT INTO citas (usuario_id, tipo_cita_id, fecha, hora, motivo, estado) 
        VALUES ($1, $2, $3, $4, $5, 1)`,
-      [userId, tipo_cita_id, fecha, hora, motivo]
+      [usuarioIdFinal, tipo_cita_id, fecha, hora, motivo]
     );
 
     res.status(201).json({ message: 'Cita registrada correctamente.' });
@@ -94,6 +95,7 @@ exports.registrarCita = async (req, res) => {
     res.status(500).json({ code: 'ERROR_INTERNO', message: 'Error al registrar la cita.' });
   }
 };
+
 
 
 exports.obtenerHorariosOcupados = async (req, res) => {
@@ -117,5 +119,27 @@ exports.obtenerHorariosOcupados = async (req, res) => {
     res.status(500).json({ message: 'Error al obtener horarios ocupados.' });
   }
 };
+
+exports.cancelarCita = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Cambiar el estado a 0 (Realizada o cancelada)
+    const result = await db.query(
+      `UPDATE citas SET estado = 0 WHERE id = $1 AND estado = 1`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Cita no encontrada o ya fue realizada/cancelada.' });
+    }
+
+    res.json({ message: 'Cita cancelada correctamente.' });
+  } catch (error) {
+    console.error('Error al cancelar cita:', error);
+    res.status(500).json({ message: 'Error al cancelar cita.' });
+  }
+};
+
 
 

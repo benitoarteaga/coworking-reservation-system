@@ -7,5 +7,6 @@ const { isAuthenticated } = require('../middleware/authMiddleware');
 router.get('/', isAuthenticated, citaController.getCitasPorRol);
 router.post('/', isAuthenticated, citaController.registrarCita);
 router.get('/horarios-ocupados', isAuthenticated, citaController.obtenerHorariosOcupados);
+router.put('/cancelar/:id', citaController.cancelarCita);
 
 module.exports = router;

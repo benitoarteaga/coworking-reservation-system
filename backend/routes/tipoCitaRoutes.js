@@ -1,15 +1,11 @@
+// routes/tiposCita.js
 const express = require('express');
 const router = express.Router();
-const db = require('../database/db');
+const tiposCitaController = require('../controllers/TipoCitaController');
+const { isAuthenticated } = require('../middleware/authMiddleware');
 
-router.get('/', async (req, res) => {
-  try {
-    const result = await db.query('SELECT * FROM tipos_cita ORDER BY id');
-    res.json(result.rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error al obtener tipos de cita' });
-  }
-});
+
+router.get('/', isAuthenticated, tiposCitaController.getTiposCita);
+router.post('/', isAuthenticated, tiposCitaController.createTipoCita);
 
 module.exports = router;

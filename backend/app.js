@@ -3,6 +3,7 @@ const session = require('express-session');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const citaRoutes = require('./routes/citaRoutes');
+const tipoCitaRoutes = require('./routes/tipoCitaRoutes');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use(session({
 
 app.use('/api/auth', authRoutes);
 app.use('/api/citas', citaRoutes);
+app.use('/api/tipos-cita', tipoCitaRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Ruta no encontrada o sin permisos.' });

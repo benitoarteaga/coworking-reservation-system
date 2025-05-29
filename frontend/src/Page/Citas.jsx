@@ -8,7 +8,7 @@ function Citas({ user }) {
     const obtenerCitas = async () => {
       try {
         const response = await fetch('http://localhost:4000/api/citas', {
-          credentials: 'include', // Para enviar la cookie de sesión
+          credentials: 'include',
         });
         const data = await response.json();
         setCitas(data);
@@ -26,7 +26,9 @@ function Citas({ user }) {
 
   return (
     <div className="container mt-4">
-      <h3 className="mb-3">Citas de {user.username}</h3>
+      <h3 className="mb-3">
+        {user.role === 'admin' ? 'Todas las Citas' : `Citas de ${user.username}`}
+      </h3>
 
       <div className="mb-3">
         <input
@@ -46,6 +48,7 @@ function Citas({ user }) {
             <thead className="table-dark">
               <tr>
                 <th>#</th>
+                {user.role === 'admin' && <th>Usuario</th>}
                 <th>Fecha</th>
                 <th>Hora</th>
                 <th>Motivo</th>
@@ -57,6 +60,7 @@ function Citas({ user }) {
               {citasFiltradas.map((cita, index) => (
                 <tr key={cita.cita_id}>
                   <td>{index + 1}</td>
+                  {user.role === 'admin' && <td>{cita.usuario}</td>}
                   <td>{cita.fecha}</td>
                   <td>{cita.hora}</td>
                   <td>{cita.motivo}</td>

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function Login({ onLoginSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const navigate = useNavigate(); // para redirección
 
   useEffect(() => {
     setShowForm(true);
@@ -28,6 +30,10 @@ function Login({ onLoginSuccess }) {
       .catch(err => {
         setError(err.message);
       });
+  };
+
+  const handleRegistro = () => {
+    navigate('/registro-cliente'); // cambia la ruta según tu configuración
   };
 
   return (
@@ -75,6 +81,17 @@ function Login({ onLoginSuccess }) {
         <button type="submit" className="btn btn-login">
           Entrar
         </button>
+
+        <div className="mt-3 text-center">
+          <span>¿No tienes cuenta? </span>
+          <button
+            type="button"
+            className="btn btn-link"
+            onClick={handleRegistro}
+          >
+            Registrarse
+          </button>
+        </div>
       </form>
     </div>
   );

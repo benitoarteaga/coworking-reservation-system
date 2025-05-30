@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const citaRoutes = require('./routes/citaRoutes');
 const tipoCitaRoutes = require('./routes/tipoCitaRoutes');
 const usersRoutes = require('./routes/users');
+const personaRoutes = require('./routes/personaRoute');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/citas', citaRoutes);
 app.use('/api/tipos-cita', tipoCitaRoutes);
 app.use('/api/users', usersRoutes);
+app.use('/api/personas', personaRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Ruta no encontrada o sin permisos.' });

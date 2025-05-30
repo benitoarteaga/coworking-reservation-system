@@ -1,0 +1,24 @@
+.registro-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  min-height: 100vh;
+  background-color: #f8f9fa; /* Puedes cambiar a tu paleta */
+}
+
+.registro-form {
+  max-width: 800px;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 12px;
+}
+
+.titulo-form {
+  font-weight: bold;
+}
+
+.seccion {
+  margin-top: 1.5rem;
+  color: #495057;
+}

@@ -4,10 +4,37 @@ import Card from '../Components/Card';
 import RegistrarCita from './RegistrarCita';
 import Citas from './Citas';
 import TiposCita from './TipoCita';
+import RutaProtegidaAdmin from '../Components/RutaProtegidaAdmin';
+import Usuarios from './Usuarios';
+import RegistroCliente from './RegistrarCliente';
+
+
 
 function Home({ user, onLogout }) {
   const [tiposCita, setTiposCita] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [rolUsuario, setRolUsuario] = useState(null);
+
+  useEffect(() => {
+    const fetchRolUsuario = async () => {
+      try {
+        const res = await fetch('http://localhost:4000/api/auth/session', {
+          credentials: 'include',
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.loggedIn && data.user?.role) {
+            setRolUsuario(data.user.role); // ← Aquí está el rol
+          }
+        }
+      } catch (err) {
+        console.error('Error al obtener rol del usuario:', err);
+      }
+    };
+
+    fetchRolUsuario();
+  }, []);
+
 
   useEffect(() => {
     fetch('http://localhost:4000/api/tipos-cita', { credentials: 'include' })
@@ -88,17 +115,34 @@ function Home({ user, onLogout }) {
         </Link>
 
         {/* Botón para crear tipo cita */}
-        <Link
-          to="/crear-tipo-cita"
-          className="btn"
-          style={{
-            backgroundColor: 'var(--color-dark-blue)',
-            color: 'white',
-            fontWeight: '500',
-          }}
-        >
-          Crear Tipo Cita
-        </Link>
+        {rolUsuario === 'admin' && (
+          <Link
+            to="/crear-tipo-cita"
+            className="btn"
+            style={{
+              backgroundColor: 'var(--color-dark-blue)',
+              color: 'white',
+              fontWeight: '500',
+            }}
+          >
+            Crear Tipo Cita
+          </Link>
+        )}
+
+          {/* Botón para crear tipo cita */}
+        {rolUsuario === 'admin' && (
+          <Link
+            to="/Usuarios"
+            className="btn"
+            style={{
+              backgroundColor: 'var(--color-dark-blue)',
+              color: 'white',
+              fontWeight: '500',
+            }}
+          >
+            Usuarios
+          </Link>
+        )}
       </div>
 
       {/* Contenedor para renderizar las rutas internas */}
@@ -136,9 +180,25 @@ function Home({ user, onLogout }) {
           />
           <Route path="/registrar-cita" element={<RegistrarCita user={user} />} />
           <Route path="/citas" element={<Citas user={user} />} />
+          <Route path="/registro-cliente" element={<RegistroCliente />} />
 
           {/* Ruta para el formulario de crear tipo cita */}
-          <Route path="/crear-tipo-cita" element={<TiposCita />} />
+          <Route path="/crear-tipo-cita" element=
+            {
+              <RutaProtegidaAdmin>
+                <TiposCita />
+              </RutaProtegidaAdmin>
+            } />
+
+            <Route
+              path="/usuarios"
+              element={
+              <RutaProtegidaAdmin>
+                <Usuarios /> 
+              </RutaProtegidaAdmin>
+              }
+            />
+
         </Routes>
       </div>
     </div>

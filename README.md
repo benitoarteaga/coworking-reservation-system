@@ -39,7 +39,7 @@ coworking-reservation-system/
 │   ├── App.jsx
 │   └── main.jsx
 │
-├── db/
+├── database/
 │   └── database.sql          # Script de inicialización de la base de datos
 │
 ├── docker-compose.yml        # Orquestación de servicios

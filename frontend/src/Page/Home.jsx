@@ -99,7 +99,7 @@ function Home({ user, onLogout }) {
             fontWeight: '500',
           }}
         >
-          Registrar Cita
+          <i class="bi bi-building-add"></i> Registrar Cita
         </Link>
 
         <Link
@@ -170,7 +170,8 @@ function Home({ user, onLogout }) {
                         description={tc.descripcion || 'Sin descripción'}
                         linkTo="/registrar-cita"
                         buttonText="Agendar"
-                        imageUrl={tc.imagen_url || 'https://via.placeholder.com/320x180?text=Sin+Imagen'}
+                        // imageUrl={tc.imagen_url || '/img/istockphoto.jpg'}
+                        imageUrl={'/img/istockphoto.jpg'}
                       />
                     </div>
                   ))}

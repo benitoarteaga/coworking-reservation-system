@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 function Citas({ user }) {
   const [citas, setCitas] = useState([]);
   const [filtroFecha, setFiltroFecha] = useState('');
+  const [busqueda, setBusqueda] = useState('');
 
   useEffect(() => {
     const obtenerCitas = async () => {
@@ -20,12 +21,22 @@ function Citas({ user }) {
     obtenerCitas();
   }, []);
 
-  const citasFiltradas = citas.filter(cita =>
-    cita.fecha.includes(filtroFecha)
-  );
+  const citasFiltradas = citas.filter(cita => {
+    const coincideFecha = filtroFecha ? cita.fecha.includes(filtroFecha) : true;
+    const coincideBusqueda = busqueda
+      ? (
+          cita.usuario?.toLowerCase().includes(busqueda) ||
+          cita.tipo_cita?.toLowerCase().includes(busqueda) ||
+          cita.motivo?.toLowerCase().includes(busqueda)
+        )
+      : true;
+
+    return coincideFecha && coincideBusqueda;
+  });
+
 
   const cancelarCita = async (id) => {
-    if (!window.confirm("¿Estás seguro de cancelar esta cita?")) return;
+    if (!window.confirm("¿Estás seguro de marcar la cita como realizada?")) return;
 
     try {
       const response = await fetch(`http://localhost:4000/api/citas/cancelar/${id}`, {
@@ -53,18 +64,32 @@ function Citas({ user }) {
   return (
     <div className="container mt-4">
       <h3 className="mb-3">
-        {user.role === 'admin' ? 'Todas las Citas' : `Citas de ${user.username}`}
+        {user.role === 'admin' ? 'TODAS LAS CITAS' : `Citas de ${user.username}`}
       </h3>
 
-      <div className="mb-3">
+    <div className="row mb-3 mt-4">
+      <div className="col-md-4">
+        <label className="form-label">Filtrar por Fecha</label>
         <input
           type="date"
           className="form-control"
           value={filtroFecha}
           onChange={e => setFiltroFecha(e.target.value)}
-          placeholder="Filtrar por fecha"
         />
       </div>
+      <div className="col-md-8">
+        <label className="form-label">Buscar por Nombre o Tipo de Cita</label>
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Ej: Juan o Odontología"
+          value={busqueda}
+          onChange={e => setBusqueda(e.target.value.toLowerCase())}
+        />
+      </div>
+    </div>
+
+
 
       {citasFiltradas.length === 0 ? (
         <p>No se encontraron citas para la fecha indicada.</p>
@@ -94,17 +119,17 @@ function Citas({ user }) {
                   <td>{cita.tipo_cita}</td>
                   <td>{cita.estado}</td>
                   {user.role === 'admin' && (
-                    <td>
+                    <td className='text-center'>
                       {cita.estado === 'Pendiente' ? (
                         <button
-                          className="btn btn-danger btn-sm"
+                          className="btn btn-success btn-sm"
                           onClick={() => cancelarCita(cita.cita_id)}
                         >
-                          <i className="bi bi-trash"></i> Cancelar
+                          <i class="bi bi-check"></i>
                         </button>
                       ) : (
-                        <button className="btn btn-success btn-sm" disabled>
-                          Realizada
+                        <button className="btn btn-primary btn-sm" disabled>
+                          <i class="bi bi-check-all"></i>
                         </button>
                       )}
                     </td>

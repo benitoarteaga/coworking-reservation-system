@@ -116,4 +116,4 @@ Benito Arteaga
 - ✅ Descripción funcional del sistema
 - ✅ Endpoints del backend
 
-Si necesitas ayuda para revisar el `docker-compose.yml`, los scripts de backend, o configurar el script `database.sql`, también puedo ayudarte. ¿Deseas incluir esos detalles?
+
